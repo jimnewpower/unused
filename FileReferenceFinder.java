@@ -25,56 +25,60 @@ public class FileReferenceFinder {
         }
 
         try {
-            // Convert root directory to Path for relative path calculations
-            Path rootPath = rootDir.toPath().toAbsolutePath().normalize();
-            
-            // Get all files with valid extensions in the project
-            List<File> allFiles = collectFiles(rootDir);
-            
-            if (allFiles.isEmpty()) {
-                System.out.println("No files with extensions " + VALID_EXTENSIONS + " found in the project.");
-                return;
-            }
-
-            // Process each file
-            for (File targetFile : allFiles) {
-                String fileName = targetFile.getName();
-                if (!fileName.endsWith(".java") || fileName.endsWith("Test.java")) {
-                    continue;
-                }
-
-                // Get relative path of the target file
-                Path targetPath = targetFile.toPath().toAbsolutePath().normalize();
-                String relativePath = rootPath.relativize(targetPath).toString();
-                
-                // Strip off the extension
-                String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.')); 
-                // System.out.println("\nSearching for references to: " + fileNameWithoutExtension + " (" + relativePath + ")");
-                
-                // Search for references in all other files with valid extensions
-                boolean foundReference = false;
-                for (File searchFile : allFiles) {
-                    // Skip the file itself
-                    if (searchFile.equals(targetFile)) {
-                        continue;
-                    }
-                    
-                    // Search for the filename (without extension) in the content of searchFile
-                    if (searchFileInContent(fileNameWithoutExtension, searchFile)) {
-                        foundReference = true;
-                        // System.out.println("  Found in: " + rootPath.relativize(searchFile.toPath().toAbsolutePath().normalize()));
-                    }
-                }
-                
-                if (!foundReference) {
-                    System.out.println("No imports found for: " + relativePath);
-                }
-            }
-
-            System.out.println("Processed " + allFiles.size() + " files.");
+            scanDirectory(rootDir);
         } catch (IOException e) {
             System.err.println("Error processing files: " + e.getMessage());
         }
+    }
+
+    private static void scanDirectory(File rootDir) throws IOException {
+        // Convert root directory to Path for relative path calculations
+        Path rootPath = rootDir.toPath().toAbsolutePath().normalize();
+        
+        // Get all files with valid extensions in the project
+        List<File> allFiles = collectFiles(rootDir);
+        
+        if (allFiles.isEmpty()) {
+            System.out.println("No files with extensions " + VALID_EXTENSIONS + " found in the project.");
+            return;
+        }
+
+        // Process each file
+        for (File targetFile : allFiles) {
+            String fileName = targetFile.getName();
+            if (!fileName.endsWith(".java") || fileName.endsWith("Test.java")) {
+                continue;
+            }
+
+            // Get relative path of the target file
+            Path targetPath = targetFile.toPath().toAbsolutePath().normalize();
+            String relativePath = rootPath.relativize(targetPath).toString();
+            
+            // Strip off the extension
+            String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.')); 
+            // System.out.println("\nSearching for references to: " + fileNameWithoutExtension + " (" + relativePath + ")");
+            
+            // Search for references in all other files with valid extensions
+            boolean foundReference = false;
+            for (File searchFile : allFiles) {
+                // Skip the file itself
+                if (searchFile.equals(targetFile)) {
+                    continue;
+                }
+                
+                // Search for the filename (without extension) in the content of searchFile
+                if (searchFileInContent(fileNameWithoutExtension, searchFile)) {
+                    foundReference = true;
+                    // System.out.println("  Found in: " + rootPath.relativize(searchFile.toPath().toAbsolutePath().normalize()));
+                }
+            }
+            
+            if (!foundReference) {
+                System.out.println("No imports found for: " + relativePath);
+            }
+        }
+
+        System.out.println("Processed " + allFiles.size() + " files.");
     }
 
     // Recursively collect all files with valid extensions in the directory
