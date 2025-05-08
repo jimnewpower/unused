@@ -39,7 +39,7 @@ public class FileReferenceFinder {
             // Process each file
             for (File targetFile : allFiles) {
                 String fileName = targetFile.getName();
-                if (!fileName.endsWith(".java") || !fileName.endsWith("Test.java")) {
+                if (!fileName.endsWith(".java") || fileName.endsWith("Test.java")) {
                     continue;
                 }
 
@@ -70,6 +70,8 @@ public class FileReferenceFinder {
                     System.out.println("No imports found for: " + relativePath);
                 }
             }
+
+            System.out.println("Processed " + allFiles.size() + " files.");
         } catch (IOException e) {
             System.err.println("Error processing files: " + e.getMessage());
         }
